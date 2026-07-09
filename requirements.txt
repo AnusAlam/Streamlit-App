@@ -1,2 +1,2 @@
 streamlit
-birdnet == 0.2.16
+birdnet
