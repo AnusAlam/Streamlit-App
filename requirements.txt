@@ -1,2 +1,2 @@
 streamlit
-birdnet
+birdnet-analyzer == 2.4.0
