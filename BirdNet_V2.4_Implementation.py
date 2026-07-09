@@ -48,8 +48,8 @@ if uploaded_file is not None:
                 bar.progress(i + 1)
                 time.sleep(0.01)
 
-            st.subheader("Top Predicted Species:")
-            st.success(filtered_df['species_name'].values[0])
+            st.subheader("*Top Predicted Specie:*")
+            st.header(f":blue{filtered_df['species_name'].values[0]}")
         else:
             st.warning("No bird species could be confidently identified.")
             
