@@ -1,37 +1,57 @@
 import streamlit as st
 import birdnet
 import time
+import os
 
 st.title("BirdNet_V2.4")
+
+# Cache model configuration
+@st.cache_resource
+def load_birdnet_model():
+    return birdnet.load("acoustic", "2.4", "tf")
+
+model = load_birdnet_model()
+
 uploaded_file = st.file_uploader("Choose an audio file", type=['wav', 'mp3', 'ogg'])
+
+# Helper function to execute prediction safely
+def analyze_audio_safely(model_obj, file_path):
+    """
+    By encapsulating the code logic here, we satisfy the context 
+    requirements for child workers spawned by the backend.
+    """
+    return model_obj.predict(file_path)
 
 if uploaded_file is not None:
     audio_bytes = uploaded_file.read()
-
     st.audio(audio_bytes, format="audio/wav")
-    with open("temp_audio.wav", "wb") as f:
-        f.write(uploaded_file.getbuffer())
+    
+    temp_file_path = os.path.abspath("temp_audio.wav")
+    with open(temp_file_path, "wb") as f:
+        f.write(audio_bytes)
 
-    st.caption("Model starts analyzing...")
+    st.caption("Model starts analyzing")
 
-    model = birdnet.load("acoustic", "2.4", "tf")
+    try:
+        # Execute through the safe function wrapper
+        result = analyze_audio_safely(model, temp_file_path)
+        df = result.to_dataframe()
+        
+        if not df.empty:
+            filtered_df = df.loc[[df['confidence'].idxmax()]]
 
-    result = model.predict("temp_audio.wav")
+            # Progress bar animation
+            latest_iteration = st.empty()
+            bar = st.progress(0)
+            for i in range(100):
+                latest_iteration.caption(f'Processing {i+1}%')
+                bar.progress(i + 1)
+                time.sleep(0.01)
 
-    df = result.to_dataframe()
-    filtered_df = df.loc[[df['confidence'].idxmax()]]
-
-    # Add a placeholder
-    latest_iteration = st.empty()
-    bar = st.progress(0)
-
-    for i in range(100):
-        # Update the progress bar with each iteration.
-        latest_iteration.caption(f'Processing {i+1}%')
-        bar.progress(i + 1)
-        time.sleep(0.04)
-
-    st.header(filtered_df['species_name'])
-
-
-
+            st.subheader("Top Predicted Species:")
+            st.success(filtered_df['species_name'].values[0])
+        else:
+            st.warning("No bird species could be confidently identified.")
+            
+    except Exception as e:
+        st.error(f"An error occurred in model prediction: {e}")
