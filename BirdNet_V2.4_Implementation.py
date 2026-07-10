@@ -14,6 +14,8 @@ model = load_birdnet_model()
 
 uploaded_file = st.file_uploader("Choose an audio file", type=['wav', 'mp3', 'ogg'])
 
+file_name = uploaded_file.name
+st.header("*file_name*")
 # Helper function to execute prediction safely
 def analyze_audio_safely(model_obj, file_path):
     """
