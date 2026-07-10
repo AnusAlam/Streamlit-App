@@ -25,7 +25,7 @@ def analyze_audio_safely(model_obj, file_path):
 
 if uploaded_file is not None:
     file_name = uploaded_file.name
-    st.header("*file_name*")
+    st.header(f"*{file_name}*")
     audio_bytes = uploaded_file.read()
     st.audio(audio_bytes, format="audio/wav")
     
